@@ -23,8 +23,6 @@ const (
 	tagsPath = "%s/v2/%s/tags/list?n=500"
 	// /v2/{repo/image}/manifests/{tag}
 	manifestPath = "%s/v2/%s/manifests/%s"
-	// Token endpoint
-	tokenPath = "/v2/token"
 
 	// HTTP headers to request API version
 	dockerAPIv1Header = "application/vnd.docker.distribution.manifest.v1+json"
@@ -32,10 +30,11 @@ const (
 )
 
 type Options struct {
-	Host     string
-	Username string
-	Password string
-	Bearer   string
+	Host      string
+	Username  string
+	Password  string
+	Bearer    string
+	TokenPath string
 }
 
 type Client struct {
@@ -231,9 +230,9 @@ func (c *Client) setupBasicAuth(ctx context.Context, url string) (string, error)
 		),
 	)
 
-	tokenURL := url + tokenPath
+	tokenURL := url + c.TokenPath
 
-	req, err := http.NewRequest(http.MethodPost, tokenURL, upReader)
+	req, err := http.NewRequest(http.MethodGet, tokenURL, upReader)
 	if err != nil {
 		return "", fmt.Errorf("failed to create basic auth request: %s", err)
 	}

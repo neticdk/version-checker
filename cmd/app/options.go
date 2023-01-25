@@ -38,18 +38,20 @@ const (
 
 	envQuayToken = "QUAY_TOKEN"
 
-	envSelfhostedPrefix   = "SELFHOSTED"
-	envSelfhostedUsername = "USERNAME"
-	envSelfhostedPassword = "PASSWORD"
-	envSelfhostedBearer   = "TOKEN"
-	envSelfhostedHost     = "HOST"
+	envSelfhostedPrefix    = "SELFHOSTED"
+	envSelfhostedUsername  = "USERNAME"
+	envSelfhostedPassword  = "PASSWORD"
+	envSelfhostedBearer    = "TOKEN"
+	envSelfhostedHost      = "HOST"
+	envSelfhostedTokenPath = "TOKENPATH"
 )
 
 var (
-	selfhostedHostReg     = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_HOST_(.*)")
-	selfhostedUsernameReg = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_USERNAME_(.*)")
-	selfhostedPasswordReg = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_PASSWORD_(.*)")
-	selfhostedTokenReg    = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_TOKEN_(.*)")
+	selfhostedHostReg      = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_HOST_(.*)")
+	selfhostedUsernameReg  = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_USERNAME_(.*)")
+	selfhostedPasswordReg  = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_PASSWORD_(.*)")
+	selfhostedTokenReg     = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_TOKEN_(.*)")
+	selfhostedTokenPathReg = regexp.MustCompile("^VERSION_CHECKER_SELFHOSTED_TOKENPATH_(.*)")
 )
 
 // Options is a struct to hold options for the version-checker
@@ -236,6 +238,12 @@ func (o *Options) addAuthFlags(fs *pflag.FlagSet) {
 			"Full host of the selfhosted registry. Include http[s] scheme (%s_%s",
 			envPrefix, envSelfhostedHost,
 		))
+	fs.StringVar(&o.selfhosted.TokenPath,
+		"selfhosted-TokenPath", "",
+		fmt.Sprintf(
+			"TokenPath for creating token is (%s_%s).",
+			envPrefix, envSelfhostedTokenPath,
+		))
 	///
 }
 
@@ -328,6 +336,11 @@ func (o *Options) assignSelfhosted(envs []string) {
 		if matches := selfhostedTokenReg.FindStringSubmatch(strings.ToUpper(pair[0])); len(matches) == 2 {
 			initOptions(matches[1])
 			o.Client.Selfhosted[matches[1]].Bearer = pair[1]
+			continue
+		}
+		if matches := selfhostedTokenPathReg.FindStringSubmatch(strings.ToUpper(pair[0])); len(matches) == 2 {
+			initOptions(matches[1])
+			o.Client.Selfhosted[matches[1]].TokenPath = pair[1]
 			continue
 		}
 	}

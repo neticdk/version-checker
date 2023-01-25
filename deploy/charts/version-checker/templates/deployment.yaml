@@ -162,6 +162,13 @@ spec:
               name: {{ $chartname }}
               key: selfhosted.{{ $element.name }}.token
         {{- end }}
+        {{- if $element.tokenpath }}
+        - name: VERSION_CHECKER_SELFHOSTED_TOKENPATH_{{ $element.name }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ $chartname }}
+              key: selfhosted.{{ $element.name }}.tokenpath
+        {{- end }}
         {{- end }}
         {{- if .Values.env }}
         {{- toYaml .Values.env | nindent 8 }}

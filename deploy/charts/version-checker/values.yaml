@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: quay.io/jetstack/version-checker
-  tag: v0.2.1
+  tag: v0.2.2
   pullPolicy: IfNotPresent
 
 service:
@@ -53,11 +53,13 @@ selfhosted: {}
   #  username:
   #  password:
   #  token:
+  #  tokenpath:
   #- name: EXAMPLE
   #  host: https://artifactory.example.com
   #  username: foo
   #  password: bar
   #  token:
+  #  tokenpath:
 
 resources: {}
   # limits:

@@ -5,9 +5,9 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/jetstack/version-checker
-  tag: v0.2.1
-  pullPolicy: IfNotPresent
+  repository: ghcr.io/neticdk/version-checker
+  tag: v0.2.2
+  pullPolicy: Always
 
 service:
   port: 8080

@@ -37,6 +37,9 @@ spec:
           - "--log-level={{.Values.versionChecker.logLevel}}"
           - "--metrics-serving-address={{.Values.versionChecker.metricsServingAddress}}"
           - "--test-all-containers={{.Values.versionChecker.testAllContainers}}"
+        {{- range $key, $value := .Values.extraArgs }}
+          - "-{{ $key }}={{ $value }}"
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         env:

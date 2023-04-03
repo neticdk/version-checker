@@ -47,6 +47,8 @@ quay:
 # Can be used to provide custom environment variables e.g. proxy settings
 env: {}
 
+extraArgs: {}
+
 selfhosted: {}
   #- name: REGISTRY
   #  host: http://registry:5000

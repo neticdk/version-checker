@@ -17,7 +17,7 @@ verify: test build ## tests and builds version-checker
 
 image: ## build docker image
 	GOARCH=$(ARCH) GOOS=linux CGO_ENABLED=0 go build -o ./bin/version-checker-linux ./cmd/.
-	docker buildx build --platform linux/amd64 -t ghcr.io/neticdk/version-checker:v0.2.2 . --load
+	docker buildx build --platform linux/amd64 -t ghcr.io/neticdk/version-checker:v0.2.3 . --load
 clean: ## clean up created files
 	rm -rf \
 		$(BINDIR)

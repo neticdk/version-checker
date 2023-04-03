@@ -44,7 +44,7 @@ const (
 	envSelfhostedBearer   = "TOKEN"
 	envSelfhostedHost     = "HOST"
 
-	envairgapOverrides = "AIRGAP_OVERRIDES"
+	envAirgapOverrides = "AIRGAP_OVERRIDES"
 )
 
 var (
@@ -113,9 +113,12 @@ func (o *Options) addAppFlags(fs *pflag.FlagSet) {
 		"log-level", "v", "info",
 		"Log level (debug, info, warn, error, fatal, panic).")
 
-	fs.StringVarP(&o.airgapOverrides,
-		"airgap-sources", "", "",
-		"Mapping of local image url to source url for override, input should be list in (key: value) format")
+	fs.StringVar(&o.airgapOverrides,
+		"airgap-overrides", "",
+		fmt.Sprintf(
+			"Mapping of local image url to source url for override, input should be list in (key: value) format (%s_%s).",
+			envPrefix, envAirgapOverrides,
+		))
 }
 
 func (o *Options) addAuthFlags(fs *pflag.FlagSet) {
@@ -272,6 +275,8 @@ func (o *Options) complete() {
 		{envGHCRAccessToken, &o.Client.GHCR.Token},
 
 		{envQuayToken, &o.Client.Quay.Token},
+
+		{envAirgapOverrides, &o.airgapOverrides},
 	} {
 		for _, env := range envs {
 			if o.assignEnv(env, opt.key, opt.assign) {

@@ -75,7 +75,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 			c := controller.New(opts.CacheTimeout, metrics,
 				client, kubeClient, log, opts.DefaultTestAll)
-
+			fmt.Println(opts.airgapOverrides)
 			return c.Run(ctx, opts.CacheTimeout/2, opts.airgapOverrides)
 		},
 	}

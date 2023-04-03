@@ -32,7 +32,7 @@ func New(search search.Searcher) *Checker {
 
 // Container will return the result of the given container's current version, compared to the latest upstream
 func (c *Checker) Container(ctx context.Context, log *logrus.Entry,
-	pod *corev1.Pod, container *corev1.Container, opts *api.Options) (*Result, error) {
+	pod *corev1.Pod, container *corev1.Container, opts *api.Options, airgapOverrides map[string]string) (*Result, error) {
 
 	// If the container image SHA status is not ready yet, exit early
 	statusSHA := containerStatusImageSHA(pod, container.Name)
@@ -41,6 +41,12 @@ func (c *Checker) Container(ctx context.Context, log *logrus.Entry,
 	}
 
 	imageURL, currentTag, currentSHA := urlTagSHAFromImage(container.Image)
+
+	if len(airgapOverrides) != 0 {
+		if overrideURL, ok := airgapOverrides[imageURL]; ok {
+			imageURL = overrideURL
+		}
+	}
 
 	usingSHA := len(currentSHA) > 0
 	usingTag := len(currentTag) > 0
@@ -112,7 +118,7 @@ func containerStatusImageSHA(pod *corev1.Pod, containerName string) string {
 	return ""
 }
 
-// isLatestOrEmptyTag will return true if the given tag is '' or 'latest'
+// isLatestOrEmptyTag will return true if the given tag is ” or 'latest'
 func (c *Checker) isLatestOrEmptyTag(tag string) bool {
 	return tag == "" || tag == "latest"
 }

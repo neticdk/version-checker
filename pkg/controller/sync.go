@@ -14,14 +14,14 @@ import (
 )
 
 // sync will enqueue a given pod to run against the version checker.
-func (c *Controller) sync(ctx context.Context, pod *corev1.Pod) error {
+func (c *Controller) sync(ctx context.Context, pod *corev1.Pod, airgapOverrides map[string]string) error {
 	log := c.log.WithField("name", pod.Name).WithField("namespace", pod.Namespace)
 
 	builder := options.New(pod.Annotations)
 
 	var errs []string
 	for _, container := range pod.Spec.Containers {
-		if err := c.syncContainer(ctx, log, builder, pod, &container); err != nil {
+		if err := c.syncContainer(ctx, log, builder, pod, &container, airgapOverrides); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
@@ -36,7 +36,7 @@ func (c *Controller) sync(ctx context.Context, pod *corev1.Pod) error {
 
 // syncContainer will enqueue a given container to check the version
 func (c *Controller) syncContainer(ctx context.Context, log *logrus.Entry, builder *options.Builder, pod *corev1.Pod,
-	container *corev1.Container) error {
+	container *corev1.Container, airgapOverrides map[string]string) error {
 	// If not enabled, exit early
 	if !builder.IsEnabled(c.defaultTestAll, container.Name) {
 		c.metrics.RemoveImage(pod.Namespace, pod.Name, container.Name)
@@ -52,7 +52,7 @@ func (c *Controller) syncContainer(ctx context.Context, log *logrus.Entry, build
 	log = log.WithField("container", container.Name)
 	log.Debug("processing conainer image")
 
-	err = c.checkContainer(ctx, log, pod, container, opts)
+	err = c.checkContainer(ctx, log, pod, container, opts, airgapOverrides)
 	// Don't re-sync, if no version found meeting search criteria
 	if versionerrors.IsNoVersionFound(err) {
 		log.Error(err.Error())
@@ -69,8 +69,8 @@ func (c *Controller) syncContainer(ctx context.Context, log *logrus.Entry, build
 // checkContainer will check the given container and options, and update
 // metrics according to the result.
 func (c *Controller) checkContainer(ctx context.Context, log *logrus.Entry, pod *corev1.Pod,
-	container *corev1.Container, opts *api.Options) error {
-	result, err := c.checker.Container(ctx, log, pod, container, opts)
+	container *corev1.Container, opts *api.Options, airgapOverrides map[string]string) error {
+	result, err := c.checker.Container(ctx, log, pod, container, opts, airgapOverrides)
 	if err != nil {
 		return err
 	}

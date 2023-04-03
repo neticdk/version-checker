@@ -27,6 +27,10 @@ func TestIsHost(t *testing.T) {
 			host:  "k8s.gcr.io",
 			expIs: true,
 		},
+		"registry.k8s.io should be true": {
+			host:  "registry.k8s.io",
+			expIs: true,
+		},
 		"foodgcr.io should be false": {
 			host:  "foogcr.io",
 			expIs: false,

@@ -18,20 +18,17 @@ func (c *Client) IsHost(host string) bool {
 
 func (c *Client) RepoImageFromPath(path string) (string, string) {
 	split := strings.Split(path, "/")
+
 	lenSplit := len(split)
 	if lenSplit == 1 {
 		return "", split[0]
 	}
-	if lenSplit == 2 {
-		return split[0], split[1]
+
+	if lenSplit > 1 {
+		return split[lenSplit-2], split[lenSplit-1]
 	}
-	if lenSplit == 3 {
-		return split[0] + "/" + split[1], split[2]
-	}
-	if lenSplit > 3 {
-		return split[0] + "/" + split[1], split[2] + "/" + split[3]
-	}
-	return "", ""
+
+	return path, ""
 }
 
 func parseURL(rawurl string) (*regexp.Regexp, string, error) {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -73,7 +74,7 @@ func New(
 }
 
 // Run is a blocking func that will run the controller.
-func (c *Controller) Run(ctx context.Context, cacheRefreshRate time.Duration) error {
+func (c *Controller) Run(ctx context.Context, cacheRefreshRate time.Duration, airgapOverrides string) error {
 	defer c.workqueue.ShutDown()
 
 	sharedInformerFactory := informers.NewSharedInformerFactoryWithOptions(c.kubeClient, time.Second*30)
@@ -96,10 +97,15 @@ func (c *Controller) Run(ctx context.Context, cacheRefreshRate time.Duration) er
 		return fmt.Errorf("error waiting for informer caches to sync")
 	}
 
+	airgapOverridesMap, err := yamlToMap(airgapOverrides)
+	if err != nil {
+		panic(err)
+	}
+
 	c.log.Info("starting workers")
 	// Launch 10 workers to process pod resources
 	for i := 0; i < numWorkers; i++ {
-		go wait.Until(func() { c.runWorker(ctx, cacheRefreshRate) }, time.Second, ctx.Done())
+		go wait.Until(func() { c.runWorker(ctx, cacheRefreshRate, airgapOverridesMap) }, time.Second, ctx.Done())
 	}
 
 	// Start image tag garbage collector
@@ -113,7 +119,7 @@ func (c *Controller) Run(ctx context.Context, cacheRefreshRate time.Duration) er
 // runWorker is a long-running function that will continually call the
 // processNextWorkItem function in order to read and process a message on the
 // workqueue.
-func (c *Controller) runWorker(ctx context.Context, searchReschedule time.Duration) {
+func (c *Controller) runWorker(ctx context.Context, searchReschedule time.Duration, airgapOverrides map[string]string) {
 	for {
 		obj, shutdown := c.workqueue.Get()
 		if shutdown {
@@ -125,7 +131,7 @@ func (c *Controller) runWorker(ctx context.Context, searchReschedule time.Durati
 			return
 		}
 
-		if err := c.processNextWorkItem(ctx, key, searchReschedule); err != nil {
+		if err := c.processNextWorkItem(ctx, key, searchReschedule, airgapOverrides); err != nil {
 			c.log.Error(err.Error())
 		}
 	}
@@ -154,7 +160,7 @@ func (c *Controller) deleteObject(obj interface{}) {
 
 // processNextWorkItem will read a single work item off the workqueue and
 // attempt to process it, by calling the syncHandler.
-func (c *Controller) processNextWorkItem(ctx context.Context, key string, searchReschedule time.Duration) error {
+func (c *Controller) processNextWorkItem(ctx context.Context, key string, searchReschedule time.Duration, airgapOverrides map[string]string) error {
 	defer c.workqueue.Done(key)
 
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -171,7 +177,7 @@ func (c *Controller) processNextWorkItem(ctx context.Context, key string, search
 		return err
 	}
 
-	if err := c.sync(ctx, pod); err != nil {
+	if err := c.sync(ctx, pod, airgapOverrides); err != nil {
 		c.scheduledWorkQueue.Add(pod, time.Second*20)
 		return fmt.Errorf("error syncing '%s/%s': %s, requeuing",
 			pod.Name, pod.Namespace, err)
@@ -181,4 +187,13 @@ func (c *Controller) processNextWorkItem(ctx context.Context, key string, search
 	c.scheduledWorkQueue.Add(key, searchReschedule)
 
 	return nil
+}
+
+func yamlToMap(yamlString string) (map[string]string, error) {
+	m := make(map[string]string)
+	err := yaml.Unmarshal([]byte(yamlString), &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
 }

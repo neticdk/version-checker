@@ -263,7 +263,9 @@ func TestContainer(t *testing.T) {
 				Image: test.imageURL,
 			}
 
-			result, err := checker.Container(context.TODO(), logrus.NewEntry(logrus.New()), pod, container, test.opts)
+			airgapOverrides := map[string]string{}
+
+			result, err := checker.Container(context.TODO(), logrus.NewEntry(logrus.New()), pod, container, test.opts, airgapOverrides)
 			if err != nil {
 				t.Errorf("unexpected error: %s", err)
 			}
